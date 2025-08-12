@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Surprise! — লোকেশন শেয়ার করে সারপ্রাইজ নাও</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--accent:#7c3aed;--glass:rgba(255,255,255,0.03)}
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans Bengali',sans-serif;background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef8}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);backdrop-filter:blur(6px);border-radius:14px;padding:28px;max-width:520px;width:100%;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    h1{margin:0 0 8px;font-size:20px}
+    p.lead{margin:0 0 18px;color:#bcd3f7}
+    .btn{display:inline-block;padding:12px 18px;border-radius:10px;background:var(--accent);color:white;text-decoration:none;border:none;font-weight:600;cursor:pointer}
+    .muted{color:#9fb0d9;font-size:13px}
+    .info{margin-top:18px;padding:12px;border-radius:10px;background:var(--glass);color:#cfe0ff}
+    .coords{font-family:monospace;background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;margin-top:10px}
+    .small{font-size:13px;color:#9fb0d9}
+    .footer{margin-top:16px;font-size:13px;color:#9fb0d9}
+    a.link{color:lightcyan}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>একটা মজার সারপ্রাইজ! 🎉</h1>
+      <p class="lead">বন্ধুকে বলো — "এক মিনিট, সারপ্রাইজ পেতে লোকেশন শেয়ার করো"। এই পেজটি তার লোকেশন জানতে নয়; এটি কেবল তার অনুমতি নিয়ে লোকেশন শেয়ার করলে সারপ্রাইজ দেখাবে।</p>
+
+      <button id="shareBtn" class="btn">লোকেশন শেয়ার করে সারপ্রাইজ চাই</button>
+      <div id="status" class="info" style="display:none"></div>
+
+      <div id="result" style="display:none">
+        <div class="coords" id="coords"></div>
+        <p class="small">Google Maps-এ দেখতে: <a id="gmap" class="link" target="_blank" rel="noopener">খুলুন</a></p>
+        <p class="footer">সতর্কতা: লোকেশন শেয়ার করলে শুধু তোমার অনুমতি এবং ব্রাউজারের মাধ্যমে লোকেশন পাওয়া যাবে। কোনো গোপনভাবে লোকেশন করা হবে না।</p>
+      </div>
+
+      <div id="explain" class="muted" style="margin-top:12px">কীভাবে কাজ করে: যখন তুমি "লোকেশন শেয়ার" বাটনে ক্লিক করবে, ব্রাউজার তোমাকে অনুমতি জানতে বলবে। তুমি "Allow" করলে পেজটি latitude ও longitude দেখাবে — এটাই সারপ্রাইজের জন্য দরকার।</div>
+
+      <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)" />
+      <div class="small">এই পেজটি কোনো তৃতীয় পক্ষকে তোমার লোকেশন পাঠায় না — শুধুমাত্র তোমার ব্রাউজারে কাজ করে।</div>
+    </div>
+  </div>
+
+<script>
+const shareBtn = document.getElementById('shareBtn');
+const status = document.getElementById('status');
+const result = document.getElementById('result');
+const coords = document.getElementById('coords');
+const gmap = document.getElementById('gmap');
+
+function showStatus(txt){status.style.display='block';status.textContent=txt}
+function hideStatus(){status.style.display='none'}
+
+shareBtn.addEventListener('click', ()=>{
+  hideStatus(); result.style.display='none'; coords.textContent='';
+
+  if (!navigator.geolocation){
+    showStatus('দুঃখিত — তোমার ব্রাউজার লোকেশন সাপোর্ট করে না।');
+    return;
+  }
+
+  showStatus('অনুমতি চাইছি... ব্রাউজার পপআপে "Allow" চাপো।');
+
+  navigator.geolocation.getCurrentPosition(function(position){
+    hideStatus();
+    const lat = position.coords.latitude.toFixed(6);
+    const lon = position.coords.longitude.toFixed(6);
+    coords.textContent = `Latitude: ${lat} \nLongitude: ${lon}`;
+    gmap.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+    gmap.textContent = `maps.google.com/@${lat},${lon}`;
+    result.style.display='block';
+
+    const surprise = `ওহ! তোমার লোকেশন পেয়ে গেলাম — সারপ্রাইজ: তোমাকে একটা রহস্যপূর্ণ উপহার পাঠানো হবে! 🎁`;
+    alert(surprise);
+  }, function(err){
+    if (err.code === 1) showStatus('অনুমতি মঞ্জুর করা হয়নি — লোকেশন শেয়ার করা হয়নি।');
+    else if (err.code === 2) showStatus('লোকেশন পাওয়া যায়নি — GPS বা নেটওয়ার্ক সমস্যা থাকতে পারে।');
+    else showStatus('অজানা ত্রুটি হয়েছে।');
+  }, {enableHighAccuracy:false, timeout:15000});
+});
+</script>
+</body>
+</html>
